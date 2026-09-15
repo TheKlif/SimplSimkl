@@ -27,32 +27,33 @@ async function simklPost(path, body) {
   return res.json();
 }
 
+const TYPES = ["shows", "movies"];
 const STATUSES = ["watching", "plantowatch", "completed"];
 
 async function loadAllLists() {
   for (const status of STATUSES) {
-    const data = await simklGet(`/sync/all-items?status=${status}`);
-    renderList(status, data);
+    document.getElementById(`list-${status}`).innerHTML = "";
+  }
+
+  for (const status of STATUSES) {
+    for (const type of TYPES) {
+      const data = await simklGet(`/sync/all-items/${type}/${status}`);
+      console.log(`RAW RESPONSE for ${type}/${status}:`, data);
+      renderItems(status, type, data);
+    }
   }
 }
 
-function renderList(status, data) {
+function renderItems(status, type, data) {
   const ul = document.getElementById(`list-${status}`);
-  ul.innerHTML = "";
-
-  // Simkl's all-items response splits by media type
-  const items = [
-    ...(data.shows || []),
-    ...(data.movies || [])
-  ];
+  const items = Array.isArray(data) ? data : (data[type] || data.items || []);
 
   for (const entry of items) {
-    const media = entry.show || entry.movie;
-    const type = entry.show ? "shows" : "movies";
+    const media = entry.show || entry.movie || entry;
     const li = document.createElement("li");
 
     const title = document.createElement("span");
-    title.textContent = media.title;
+    title.textContent = media.title || "(no title found)";
 
     const select = document.createElement("select");
     for (const s of STATUSES) {
