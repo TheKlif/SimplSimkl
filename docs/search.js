@@ -11,17 +11,26 @@ function firstSentence(text, maxLen = 140) {
   return sentence;
 }
 
+function normalizedIds(item) {
+  // Search results use ids.simkl_id; every other endpoint in this app
+  // (detail fetch, sync/add-to-list) expects ids.simkl.
+  if (item.ids && item.ids.simkl_id && !item.ids.simkl) {
+    return { ...item.ids, simkl: item.ids.simkl_id };
+  }
+  return item.ids;
+}
+
 async function fetchOverview(item) {
-  if (!item.ids || !item.ids.simkl) {
-    console.warn("Search result has no ids.simkl, cannot fetch overview:", item);
+  // Search results key the Simkl ID as ids.simkl_id, not ids.simkl like every
+  // other endpoint in this app. Confirmed from a live response.
+  const simklId = item.ids && (item.ids.simkl_id || item.ids.simkl);
+  if (!simklId) {
+    console.warn("Search result has no simkl id, cannot fetch overview:", item);
     return null;
   }
   try {
     const singularType = item._type === "shows" ? "tv" : "movies";
-    const detail = await simklGet(`/${singularType}/${item.ids.simkl}?extended=full`);
-    if (!detail.overview) {
-      console.warn(`Detail fetch for "${item.title}" had no overview field:`, detail);
-    }
+    const detail = await simklGet(`/${singularType}/${simklId}?extended=full`);
     return detail.overview || null;
   } catch (e) {
     console.error(`Overview fetch failed for "${item.title}":`, e);
@@ -70,7 +79,7 @@ function renderSearchResults() {
     img.src = posterUrl(item.poster);
     img.alt = item.title;
     img.className = "search-result-banner";
-    img.addEventListener("click", () => showItemDetail(item._type, item.ids, null));
+    img.addEventListener("click", () => showItemDetail(item._type, normalizedIds(item), null));
     li.appendChild(img);
 
     const textCol = document.createElement("div");
@@ -79,7 +88,7 @@ function renderSearchResults() {
     const title = document.createElement("span");
     title.className = "search-result-title";
     title.textContent = item.year ? `${item.title} (${item.year})` : item.title;
-    title.addEventListener("click", () => showItemDetail(item._type, item.ids, null));
+    title.addEventListener("click", () => showItemDetail(item._type, normalizedIds(item), null));
     textCol.appendChild(title);
 
     const overview = document.createElement("p");
@@ -94,7 +103,7 @@ function renderSearchResults() {
       btn.className = "status-btn";
       btn.textContent = s;
       btn.addEventListener("click", async () => {
-        await changeStatus(item._type, item.ids, s);
+        await changeStatus(item._type, normalizedIds(item), s);
         const confirmMsg = document.createElement("span");
         confirmMsg.className = "search-result-confirm";
         confirmMsg.textContent = `Added to ${s}.`;
