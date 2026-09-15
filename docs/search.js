@@ -12,14 +12,19 @@ function firstSentence(text, maxLen = 140) {
 }
 
 async function fetchOverview(item) {
-  // /search/{type} does not reliably return overview, even with extended=full.
-  // Fall back to the per-item detail endpoint, the same call the item-detail
-  // popup already uses successfully.
+  if (!item.ids || !item.ids.simkl) {
+    console.warn("Search result has no ids.simkl, cannot fetch overview:", item);
+    return null;
+  }
   try {
     const singularType = item._type === "shows" ? "tv" : "movies";
     const detail = await simklGet(`/${singularType}/${item.ids.simkl}?extended=full`);
+    if (!detail.overview) {
+      console.warn(`Detail fetch for "${item.title}" had no overview field:`, detail);
+    }
     return detail.overview || null;
   } catch (e) {
+    console.error(`Overview fetch failed for "${item.title}":`, e);
     return null;
   }
 }
@@ -32,6 +37,9 @@ async function runSearch(query) {
     simklGet(`/search/movie?extended=full&q=${encodeURIComponent(query)}`),
     simklGet(`/search/tv?extended=full&q=${encodeURIComponent(query)}`)
   ]);
+
+  console.log("Raw movie search result sample:", movieResults && movieResults[0]);
+  console.log("Raw tv search result sample:", tvResults && tvResults[0]);
 
   searchResultsCache = [
     ...(movieResults || []).map(item => ({ ...item, _type: "movies" })),
