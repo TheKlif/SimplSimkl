@@ -3,6 +3,7 @@ async function showItemDetail(type, ids, currentStatus) {
   const detail = document.getElementById("itemdetail");
   detail.style.display = "block";
   detail.innerHTML = "Loading…";
+  detail.scrollIntoView({ behavior: "smooth", block: "start" });
 
   const data = await simklGet(`/${singularType}/${ids.simkl}?extended=full`);
   console.log(`RAW ${singularType.toUpperCase()} DETAIL for ${data.title}:`, data);

@@ -1,6 +1,6 @@
 function posterUrl(path) {
   if (!path) return "https://wsrv.nl/?url=https://simkl.in/poster_no_pic_c.png";
-  return `https://wsrv.nl/?url=https://simkl.in/posters/${path}_w.webp&q=90`;
+  return `https://wsrv.nl/?url=https://simkl.in/posters/${path}_m.webp&q=90`;
 }
 
 async function loadNextUp() {
