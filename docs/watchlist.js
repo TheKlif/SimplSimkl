@@ -1,10 +1,12 @@
-const SIMKL_API_KEY = CLIENT_ID; // same value, per Simkl's docs the client_id doubles as simkl-api-key
+function withAppParams(path) {
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}client_id=${CLIENT_ID}&app-name=${APP_NAME}&app-version=${APP_VERSION}`;
+}
 
 async function simklGet(path) {
   const token = await getToken();
-  const res = await fetch(`https://api.simkl.com${path}`, {
+  const res = await fetch(`https://api.simkl.com${withAppParams(path)}`, {
     headers: {
-      "simkl-api-key": SIMKL_API_KEY,
       "Authorization": `Bearer ${token}`
     }
   });
@@ -14,10 +16,9 @@ async function simklGet(path) {
 
 async function simklPost(path, body) {
   const token = await getToken();
-  const res = await fetch(`https://api.simkl.com${path}`, {
+  const res = await fetch(`https://api.simkl.com${withAppParams(path)}`, {
     method: "POST",
     headers: {
-      "simkl-api-key": SIMKL_API_KEY,
       "Authorization": `Bearer ${token}`,
       "Content-Type": "application/json"
     },
@@ -38,7 +39,6 @@ async function loadAllLists() {
   for (const status of STATUSES) {
     for (const type of TYPES) {
       const data = await simklGet(`/sync/all-items/${type}/${status}`);
-      console.log(`RAW RESPONSE for ${type}/${status}:`, data);
       renderItems(status, type, data);
     }
   }

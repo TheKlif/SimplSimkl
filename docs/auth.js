@@ -1,5 +1,7 @@
 const CLIENT_ID = "392f045b7505ac51b40654b515ed7146cc51cb2ffcf1bb7905085744fcd93dc8";
 const REDIRECT_URI = "https://theklif.github.io/SimplSimkl/";
+const APP_NAME = "simplsimkl";
+const APP_VERSION = "1.0";
 
 // --- IndexedDB helpers ---
 function openDB() {
@@ -66,6 +68,8 @@ async function startLogin() {
   url.searchParams.set("redirect_uri", REDIRECT_URI);
   url.searchParams.set("code_challenge", challenge);
   url.searchParams.set("code_challenge_method", "S256");
+  url.searchParams.set("app-name", APP_NAME);
+  url.searchParams.set("app-version", APP_VERSION);
 
   window.location.href = url.toString();
 }
@@ -73,7 +77,7 @@ async function startLogin() {
 // --- Step 2: handle the redirect back ---
 async function handleCallback(code) {
   const verifier = sessionStorage.getItem("pkce_verifier");
-  const res = await fetch("https://api.simkl.com/oauth/token", {
+  const res = await fetch(`https://api.simkl.com/oauth/token?client_id=${CLIENT_ID}&app-name=${APP_NAME}&app-version=${APP_VERSION}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
