@@ -72,14 +72,30 @@
     <div id="episodedetail" class="modal"></div>
   </div>
 
-  <script src="auth.js"></script>
-  <script src="sortutils.js"></script>
-  <script src="watchlist.js"></script>
-  <script src="nextup.js"></script>
-  <script src="search.js"></script>
-  <script src="itemdetail.js"></script>
-  <script src="tabs.js"></script>
-  <script src="registersw.js"></script>
-  <script src="buildinfo.js"></script>
+  <script>
+    (async () => {
+      let versionTag = Date.now(); // fallback if the GitHub API call fails
+      try {
+        const res = await fetch("https://api.github.com/repos/TheKlif/SimplSimkl/commits?path=docs&per_page=1");
+        const commits = await res.json();
+        const commitDate = new Date(commits[0].commit.committer.date);
+        document.getElementById("lastUpdated").textContent = `Last updated: ${commitDate.toLocaleString()}`;
+        versionTag = commits[0].sha.slice(0, 7);
+      } catch (err) {
+        document.getElementById("lastUpdated").textContent = "Last updated: unknown (couldn't reach GitHub)";
+      }
+
+      const scripts = [
+        "auth.js", "sortutils.js", "watchlist.js", "nextup.js",
+        "search.js", "itemdetail.js", "tabs.js", "registersw.js"
+      ];
+      for (const src of scripts) {
+        const el = document.createElement("script");
+        el.src = `${src}?v=${versionTag}`;
+        el.async = false; // dynamically created scripts default to async=true; this preserves load order
+        document.body.appendChild(el);
+      }
+    })();
+  </script>
 </body>
 </html>
