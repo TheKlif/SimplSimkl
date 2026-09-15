@@ -118,6 +118,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (code) {
     await handleCallback(code);
   } else {
-    document.getElementById("connectBtn").addEventListener("click", startLogin);
+    const connectBtn = document.getElementById("connectBtn");
+    connectBtn.style.display = "inline-block";
+    connectBtn.addEventListener("click", startLogin);
   }
 });
