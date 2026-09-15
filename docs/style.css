@@ -230,3 +230,14 @@ details summary { cursor: pointer; color: var(--mint); padding: 0.3em 0; }
   .nextup-banner, .search-result-banner { width: 60px; }
   .modal { padding: 1em; max-width: 100%; }
 }
+
+.type-badge {
+  font-size: 0.7em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.1em 0.4em;
+  flex-shrink: 0;
+}

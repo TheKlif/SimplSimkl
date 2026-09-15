@@ -91,6 +91,11 @@ function renderSearchResults() {
     title.addEventListener("click", () => showItemDetail(item._type, normalizedIds(item), null));
     textCol.appendChild(title);
 
+    const badge = document.createElement("span");
+    badge.className = "type-badge";
+    badge.textContent = TYPE_LABELS[item._type] || item._type;
+    textCol.appendChild(badge);
+
     const overview = document.createElement("p");
     overview.className = "search-result-overview";
     overview.textContent = firstSentence(item.overview) || "(no overview available)";

@@ -1,6 +1,8 @@
 // Client-side sorting only. Simkl's /sync/all-items endpoint takes no sort
 // parameter, so everything here operates on the full list already fetched.
 
+const TYPE_LABELS = { shows: "TV", movies: "Movie" };
+
 function getEntryTitle(entry) {
   const media = entry.show || entry.movie || entry;
   return (media.title || "").toLowerCase();

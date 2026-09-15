@@ -63,6 +63,10 @@ function renderStatusList(status) {
     title.textContent = media.title || "(no title found)";
     title.addEventListener("click", () => showItemDetail(entry._type, media.ids, status));
 
+    const badge = document.createElement("span");
+    badge.className = "type-badge";
+    badge.textContent = TYPE_LABELS[entry._type] || entry._type;
+
     const select = document.createElement("select");
     select.className = "status-select";
     for (const s of STATUSES) {
@@ -75,6 +79,7 @@ function renderStatusList(status) {
     select.addEventListener("change", () => changeStatus(entry._type, media.ids, select.value));
 
     li.appendChild(title);
+    li.appendChild(badge);
     li.appendChild(select);
     ul.appendChild(li);
   }
