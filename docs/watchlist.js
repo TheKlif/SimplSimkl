@@ -54,6 +54,9 @@ function renderItems(status, type, data) {
 
     const title = document.createElement("span");
     title.textContent = media.title || "(no title found)";
+    title.style.cursor = "pointer";
+    title.style.textDecoration = "underline";
+    title.addEventListener("click", () => showItemDetail(type, media.ids, status));
 
     const select = document.createElement("select");
     for (const s of STATUSES) {
