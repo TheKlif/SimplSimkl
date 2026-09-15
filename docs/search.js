@@ -1,9 +1,27 @@
 let searchResultsCache = [];
 
-function truncateOverview(text, maxLen = 200) {
-  if (!text) return "(no overview available)";
-  const clean = String(text).replace(/<br\s*\/?>/gi, " ");
-  return clean.length > maxLen ? `${clean.slice(0, maxLen).trim()}…` : clean;
+function firstSentence(text, maxLen = 140) {
+  if (!text) return null;
+  const clean = String(text).replace(/<br\s*\/?>/gi, " ").trim();
+  const match = clean.match(/^.*?[.!?](?=\s|$)/);
+  let sentence = match ? match[0] : clean;
+  if (sentence.length > maxLen) {
+    sentence = `${sentence.slice(0, maxLen).trim()}…`;
+  }
+  return sentence;
+}
+
+async function fetchOverview(item) {
+  // /search/{type} does not reliably return overview, even with extended=full.
+  // Fall back to the per-item detail endpoint, the same call the item-detail
+  // popup already uses successfully.
+  try {
+    const singularType = item._type === "shows" ? "tv" : "movies";
+    const detail = await simklGet(`/${singularType}/${item.ids.simkl}?extended=full`);
+    return detail.overview || null;
+  } catch (e) {
+    return null;
+  }
 }
 
 async function runSearch(query) {
@@ -19,6 +37,10 @@ async function runSearch(query) {
     ...(movieResults || []).map(item => ({ ...item, _type: "movies" })),
     ...(tvResults || []).map(item => ({ ...item, _type: "shows" }))
   ];
+
+  await Promise.all(searchResultsCache.map(async item => {
+    if (!item.overview) item.overview = await fetchOverview(item);
+  }));
 
   renderSearchResults();
 }
@@ -40,6 +62,7 @@ function renderSearchResults() {
     img.src = posterUrl(item.poster);
     img.alt = item.title;
     img.className = "search-result-banner";
+    img.addEventListener("click", () => showItemDetail(item._type, item.ids, null));
     li.appendChild(img);
 
     const textCol = document.createElement("div");
@@ -48,11 +71,12 @@ function renderSearchResults() {
     const title = document.createElement("span");
     title.className = "search-result-title";
     title.textContent = item.year ? `${item.title} (${item.year})` : item.title;
+    title.addEventListener("click", () => showItemDetail(item._type, item.ids, null));
     textCol.appendChild(title);
 
     const overview = document.createElement("p");
     overview.className = "search-result-overview";
-    overview.textContent = truncateOverview(item.overview);
+    overview.textContent = firstSentence(item.overview) || "(no overview available)";
     textCol.appendChild(overview);
 
     const btnGroup = document.createElement("div");
