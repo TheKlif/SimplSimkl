@@ -1,4 +1,4 @@
-const TAB_IDS = ["nextup", "watching", "plantowatch", "completed"];
+const TAB_IDS = ["nextup", "watching", "plantowatch", "completed", "search"];
 
 function activateTab(tabId) {
   for (const id of TAB_IDS) {

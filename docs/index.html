@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SimplSimkl</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
@@ -17,6 +18,7 @@
       <button class="tab-btn" data-tab="watching">Watching</button>
       <button class="tab-btn" data-tab="plantowatch">Plan to Watch</button>
       <button class="tab-btn" data-tab="completed">Watched</button>
+      <button class="tab-btn" data-tab="search">Search</button>
     </nav>
 
     <div id="tabpanel-nextup" class="tab-panel">
@@ -50,6 +52,17 @@
       </div>
       <ul id="list-completed"></ul>
     </div>
+
+    <div id="tabpanel-search" class="tab-panel" hidden>
+      <div class="panel-header">
+        <h2>Search Simkl</h2>
+      </div>
+      <form id="search-form" class="search-form">
+        <input type="text" id="search-input" placeholder="Search movies and TV shows" autocomplete="off">
+        <button type="submit">Search</button>
+      </form>
+      <ul id="search-results"></ul>
+    </div>
   </div>
 
   <div id="itemdetail-overlay" class="overlay" hidden>
@@ -63,6 +76,7 @@
   <script src="sortutils.js"></script>
   <script src="watchlist.js"></script>
   <script src="nextup.js"></script>
+  <script src="search.js"></script>
   <script src="itemdetail.js"></script>
   <script src="tabs.js"></script>
   <script src="registersw.js"></script>
