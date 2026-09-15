@@ -6,9 +6,7 @@ function withAppParams(path) {
 async function simklGet(path) {
   const token = await getToken();
   const res = await fetch(`https://api.simkl.com${withAppParams(path)}`, {
-    headers: {
-      "Authorization": `Bearer ${token}`
-    }
+    headers: { "Authorization": `Bearer ${token}` }
   });
   if (!res.ok) throw new Error(`GET ${path} failed: ${res.status}`);
   return res.json();
@@ -31,34 +29,42 @@ async function simklPost(path, body) {
 const TYPES = ["shows", "movies"];
 const STATUSES = ["watching", "plantowatch", "completed"];
 
+const watchlistCache = { watching: [], plantowatch: [], completed: [] };
+
 async function loadAllLists() {
-  for (const status of STATUSES) {
-    document.getElementById(`list-${status}`).innerHTML = "";
-  }
+  for (const status of STATUSES) watchlistCache[status] = [];
 
   for (const status of STATUSES) {
     for (const type of TYPES) {
       const data = await simklGet(`/sync/all-items/${type}/${status}`);
-      renderItems(status, type, data);
+      const items = Array.isArray(data) ? data : (data[type] || data.items || []);
+      for (const entry of items) {
+        watchlistCache[status].push({ ...entry, _type: type });
+      }
     }
   }
+
+  for (const status of STATUSES) renderStatusList(status);
 }
 
-function renderItems(status, type, data) {
+function renderStatusList(status) {
   const ul = document.getElementById(`list-${status}`);
-  const items = Array.isArray(data) ? data : (data[type] || data.items || []);
+  ul.innerHTML = "";
 
-  for (const entry of items) {
+  const sortSelect = document.getElementById(`sort-${status}`);
+  const sorted = applySort(watchlistCache[status], sortSelect.value);
+
+  for (const entry of sorted) {
     const media = entry.show || entry.movie || entry;
     const li = document.createElement("li");
 
     const title = document.createElement("span");
+    title.className = "item-title";
     title.textContent = media.title || "(no title found)";
-    title.style.cursor = "pointer";
-    title.style.textDecoration = "underline";
-    title.addEventListener("click", () => showItemDetail(type, media.ids, status));
+    title.addEventListener("click", () => showItemDetail(entry._type, media.ids, status));
 
     const select = document.createElement("select");
+    select.className = "status-select";
     for (const s of STATUSES) {
       const opt = document.createElement("option");
       opt.value = s;
@@ -66,7 +72,7 @@ function renderItems(status, type, data) {
       if (s === status) opt.selected = true;
       select.appendChild(opt);
     }
-    select.addEventListener("change", () => changeStatus(type, media.ids, select.value));
+    select.addEventListener("change", () => changeStatus(entry._type, media.ids, select.value));
 
     li.appendChild(title);
     li.appendChild(select);
@@ -77,12 +83,16 @@ function renderItems(status, type, data) {
 async function changeStatus(type, ids, newStatus) {
   const body = { [type]: [{ ids: ids, to: newStatus }] };
   await simklPost("/sync/add-to-list", body);
-  await loadAllLists(); // re-pull to reflect the move; activities-check optimization comes later
+  await loadAllLists();
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
-  const token = await getToken();
-  if (token) {
-    await loadAllLists();
+  for (const status of STATUSES) {
+    const sel = document.getElementById(`sort-${status}`);
+    populateSortSelect(sel);
+    sel.addEventListener("change", () => renderStatusList(status));
   }
+
+  const token = await getToken();
+  if (token) await loadAllLists();
 });

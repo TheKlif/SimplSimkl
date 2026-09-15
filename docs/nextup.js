@@ -3,34 +3,57 @@ function posterUrl(path) {
   return `https://wsrv.nl/?url=https://simkl.in/posters/${path}_m.webp&q=90`;
 }
 
+let nextUpCache = [];
+
 async function loadNextUp() {
+  const watchingData = await simklGet("/sync/all-items/shows/watching");
+  const watchingShows = watchingData.shows || [];
+  nextUpCache = watchingShows.filter(entry => entry.next_to_watch);
+  renderNextUp();
+}
+
+function renderNextUp() {
   const ul = document.getElementById("list-nextup");
   ul.innerHTML = "";
 
-  const watchingData = await simklGet("/sync/all-items/shows/watching");
-  const watchingShows = watchingData.shows || [];
+  const sortSelect = document.getElementById("sort-nextup");
+  const sorted = applySort(nextUpCache, sortSelect.value);
 
-  for (const entry of watchingShows) {
-    if (!entry.next_to_watch) continue; // fully caught up, nothing to show
-
+  for (const entry of sorted) {
     const show = entry.show;
     const li = document.createElement("li");
+    li.className = "nextup-item";
 
     const img = document.createElement("img");
     img.src = posterUrl(show.poster);
     img.alt = show.title;
-    img.width = 60;
+    img.className = "nextup-banner";
+    img.addEventListener("click", () => showItemDetail("shows", show.ids, "watching"));
+
+    const textCol = document.createElement("div");
+    textCol.className = "nextup-text";
 
     const title = document.createElement("span");
-    title.textContent = ` ${show.title} — ${entry.next_to_watch} `;
+    title.className = "nextup-title";
+    title.textContent = show.title;
+    title.addEventListener("click", () => showItemDetail("shows", show.ids, "watching"));
+
+    const episode = document.createElement("span");
+    episode.className = "nextup-episode";
+    episode.textContent = entry.next_to_watch;
+    episode.addEventListener("click", () => showEpisodeDetail(show, entry.next_to_watch));
 
     const markBtn = document.createElement("button");
+    markBtn.className = "mark-watched-btn";
     markBtn.textContent = "Mark watched";
     markBtn.addEventListener("click", () => markEpisodeWatched(show, entry.next_to_watch));
 
+    textCol.appendChild(title);
+    textCol.appendChild(episode);
+    textCol.appendChild(markBtn);
+
     li.appendChild(img);
-    li.appendChild(title);
-    li.appendChild(markBtn);
+    li.appendChild(textCol);
     ul.appendChild(li);
   }
 }
@@ -43,19 +66,18 @@ async function markEpisodeWatched(show, seasonEpisodeStr) {
   await simklPost("/sync/history", {
     shows: [{
       ids: show.ids,
-      seasons: [{
-        number: season,
-        episodes: [{ number: episode }]
-      }]
+      seasons: [{ number: season, episodes: [{ number: episode }] }]
     }]
   });
 
-  await loadNextUp(); // refresh to show the new next_to_watch
+  await loadNextUp();
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
+  const sel = document.getElementById("sort-nextup");
+  populateSortSelect(sel);
+  sel.addEventListener("change", renderNextUp);
+
   const token = await getToken();
-  if (token) {
-    await loadNextUp();
-  }
+  if (token) await loadNextUp();
 });
