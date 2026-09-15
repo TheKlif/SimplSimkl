@@ -10,6 +10,7 @@ async function loadNextUp() {
     const episodesData = await simklGet(`/tv/episodes/${show.ids.simkl}`);
     console.log(`RAW EPISODES for ${show.title}:`, episodesData);
     console.log(`WATCHED-EPISODE DATA for ${show.title}:`, entry);
+    console.log(JSON.stringify(entry, null, 2));
   }
 }
 
