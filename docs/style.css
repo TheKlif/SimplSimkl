@@ -176,6 +176,12 @@ li {
   font-size: 0.85em;
   cursor: pointer;
 }
+
+.status-btn-active {
+  border-color: var(--mint);
+  color: var(--mint);
+}
+
 .status-btn:hover { border-color: var(--mint); color: var(--mint); }
 .search-result-confirm { color: var(--mint); font-size: 0.85em; }
 

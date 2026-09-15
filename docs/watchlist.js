@@ -67,20 +67,20 @@ function renderStatusList(status) {
     badge.className = "type-badge";
     badge.textContent = TYPE_LABELS[entry._type] || entry._type;
 
-    const select = document.createElement("select");
-    select.className = "status-select";
+    const btnGroup = document.createElement("div");
+    btnGroup.className = "status-btn-group";
     for (const s of STATUSES) {
-      const opt = document.createElement("option");
-      opt.value = s;
-      opt.textContent = s;
-      if (s === status) opt.selected = true;
-      select.appendChild(opt);
+      const btn = document.createElement("button");
+      btn.className = "status-btn";
+      if (s === status) btn.classList.add("status-btn-active");
+      btn.textContent = s;
+      btn.addEventListener("click", () => changeStatus(entry._type, media.ids, s));
+      btnGroup.appendChild(btn);
     }
-    select.addEventListener("change", () => changeStatus(entry._type, media.ids, select.value));
 
     li.appendChild(title);
     li.appendChild(badge);
-    li.appendChild(select);
+    li.appendChild(btnGroup);
     ul.appendChild(li);
   }
 }

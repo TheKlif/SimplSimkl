@@ -73,11 +73,11 @@ async function markEpisodeWatched(show, seasonEpisodeStr) {
   await loadNextUp();
 }
 
-window.addEventListener("DOMContentLoaded", async () => {
+(async () => {
   const sel = document.getElementById("sort-nextup");
   populateSortSelect(sel);
   sel.addEventListener("change", renderNextUp);
 
   const token = await getToken();
   if (token) await loadNextUp();
-});
+})();
