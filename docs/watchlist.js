@@ -29,6 +29,13 @@ async function simklPost(path, body) {
 const TYPES = ["shows", "movies"];
 const STATUSES = ["watching", "plantowatch", "completed"];
 
+// Movies don't carry a "watching" status on Simkl; setting it silently
+// no-ops server-side. Any status control should offer only the statuses
+// valid for the item's type.
+function statusesFor(type) {
+  return type === "movies" ? STATUSES.filter(s => s !== "watching") : STATUSES;
+}
+
 const watchlistCache = { watching: [], plantowatch: [], completed: [] };
 
 async function loadAllLists() {
@@ -69,7 +76,7 @@ function renderStatusList(status) {
 
     const btnGroup = document.createElement("div");
     btnGroup.className = "status-btn-group";
-    for (const s of STATUSES) {
+    for (const s of statusesFor(entry._type)) {
       const btn = document.createElement("button");
       btn.className = "status-btn";
       if (s === status) btn.classList.add("status-btn-active");

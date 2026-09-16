@@ -103,7 +103,7 @@ function renderSearchResults() {
 
     const btnGroup = document.createElement("div");
     btnGroup.className = "status-btn-group";
-    for (const s of STATUSES) {
+    for (const s of statusesFor(item._type)) {
       const btn = document.createElement("button");
       btn.className = "status-btn";
       btn.textContent = s;

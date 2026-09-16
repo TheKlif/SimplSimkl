@@ -41,7 +41,7 @@ async function showItemDetail(type, ids, currentStatus) {
   detail.appendChild(overview);
 
   const select = document.createElement("select");
-  for (const s of STATUSES) {
+  for (const s of statusesFor(type)) {
     const opt = document.createElement("option");
     opt.value = s;
     opt.textContent = s;
