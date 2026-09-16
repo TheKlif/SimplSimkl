@@ -105,8 +105,12 @@ async function handleCallback(code) {
   window.history.replaceState({}, document.title, REDIRECT_URI);
 }
 
+console.log("auth.js: readyState at listener registration =", document.readyState);
+
 // --- Entry point ---
 window.addEventListener("DOMContentLoaded", async () => {
+  console.log("auth.js: DOMContentLoaded handler actually ran");
+
   const params = new URLSearchParams(window.location.search);
   const code = params.get("code");
 
