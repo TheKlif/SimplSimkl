@@ -185,6 +185,14 @@ li {
 .status-btn:hover { border-color: var(--mint); color: var(--mint); }
 .search-result-confirm { color: var(--mint); font-size: 0.85em; }
 
+.search-correction-note {
+  color: var(--text-muted);
+  font-size: 0.85em;
+  font-style: italic;
+  padding: 0.3em 0;
+  border-bottom: none;
+}
+
 .overlay {
   position: fixed;
   inset: 0;

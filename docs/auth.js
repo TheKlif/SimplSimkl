@@ -2,6 +2,7 @@ const CLIENT_ID = "392f045b7505ac51b40654b515ed7146cc51cb2ffcf1bb7905085744fcd93
 const REDIRECT_URI = "https://theklif.github.io/SimplSimkl/";
 const APP_NAME = "simplsimkl";
 const APP_VERSION = "1.0";
+const TMDB_API_KEY = "61d04d1bd78fbe46d2702c45885e444f";
 
 // --- IndexedDB helpers ---
 function openDB() {

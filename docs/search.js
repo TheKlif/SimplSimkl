@@ -1,4 +1,27 @@
 let searchResultsCache = [];
+let searchCorrectionNote = null;
+
+// TMDB has real typo tolerance; Simkl's own /search does not. This uses
+// TMDB purely to fix the spelling of the query text, then hands the
+// corrected title to Simkl's own search below — Simkl stays the only
+// source of poster/overview/ids.simkl data (the /redirect endpoint's
+// tmdb-to-simkl ID lookup can't be read from browser JS: it returns its
+// answer as a Location header on a cross-origin redirect, which fetch()
+// deliberately hides from script). Falls back to the raw query if TMDB
+// has no match or the request fails, so search never breaks entirely.
+async function correctQueryViaTmdb(query) {
+  try {
+    const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`);
+    if (!res.ok) throw new Error(`TMDB search failed: ${res.status}`);
+    const data = await res.json();
+    const top = (data.results || []).find(r => r.media_type === "movie" || r.media_type === "tv");
+    if (!top) return query;
+    return top.title || top.name || query;
+  } catch (e) {
+    console.error("TMDB fuzzy-correction failed, using raw query instead:", e);
+    return query;
+  }
+}
 
 function firstSentence(text, maxLen = 140) {
   if (!text) return null;
@@ -42,9 +65,12 @@ async function runSearch(query) {
   const resultsEl = document.getElementById("search-results");
   resultsEl.innerHTML = "Searching…";
 
+  const correctedQuery = await correctQueryViaTmdb(query);
+  searchCorrectionNote = correctedQuery.toLowerCase() !== query.toLowerCase() ? correctedQuery : null;
+
   const [movieResults, tvResults] = await Promise.all([
-    simklGet(`/search/movie?extended=full&q=${encodeURIComponent(query)}`),
-    simklGet(`/search/tv?extended=full&q=${encodeURIComponent(query)}`)
+    simklGet(`/search/movie?extended=full&q=${encodeURIComponent(correctedQuery)}`),
+    simklGet(`/search/tv?extended=full&q=${encodeURIComponent(correctedQuery)}`)
   ]);
 
   console.log("Raw movie search result sample:", movieResults && movieResults[0]);
@@ -66,8 +92,17 @@ function renderSearchResults() {
   const resultsEl = document.getElementById("search-results");
   resultsEl.innerHTML = "";
 
+  if (searchCorrectionNote) {
+    const note = document.createElement("li");
+    note.className = "search-correction-note";
+    note.textContent = `Showing results for "${searchCorrectionNote}"`;
+    resultsEl.appendChild(note);
+  }
+
   if (searchResultsCache.length === 0) {
-    resultsEl.textContent = "No results.";
+    const empty = document.createElement("li");
+    empty.textContent = "No results.";
+    resultsEl.appendChild(empty);
     return;
   }
 
