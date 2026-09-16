@@ -105,15 +105,11 @@ async function handleCallback(code) {
   window.history.replaceState({}, document.title, REDIRECT_URI);
 }
 
-console.log("auth.js: readyState at listener registration =", document.readyState);
-
 // --- Entry point ---
-window.addEventListener("DOMContentLoaded", async () => {
-  console.log("auth.js: DOMContentLoaded handler actually ran");
-
+ready(async () => {
   const params = new URLSearchParams(window.location.search);
   const code = params.get("code");
-
+  
   const existingToken = await getToken();
   if (existingToken) {
     document.getElementById("status").textContent = "Already connected.";
