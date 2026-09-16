@@ -54,11 +54,16 @@ async function loadAllLists() {
   for (const status of STATUSES) renderStatusList(status);
 }
 
-function renderStatusList(status) {
+async function renderStatusList(status) {
   const ul = document.getElementById(`list-${status}`);
-  ul.innerHTML = "";
-
   const sortSelect = document.getElementById(`sort-${status}`);
+
+  if (sortSelect.value === "episodesRemaining") {
+    ul.innerHTML = "Loading episode counts…";
+    await ensureEpisodesRemaining(watchlistCache[status]);
+  }
+
+  ul.innerHTML = "";
   const sorted = applySort(watchlistCache[status], sortSelect.value);
 
   for (const entry of sorted) {
@@ -101,7 +106,7 @@ async function changeStatus(type, ids, newStatus) {
 ready(async () => {
   for (const status of STATUSES) {
     const sel = document.getElementById(`sort-${status}`);
-    populateSortSelect(sel);
+    populateSortSelect(sel, null, status === "watching" ? [] : ["episodesRemaining"]);
     sel.addEventListener("change", () => renderStatusList(status));
   }
 

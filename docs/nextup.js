@@ -12,11 +12,16 @@ async function loadNextUp() {
   renderNextUp();
 }
 
-function renderNextUp() {
+async function renderNextUp() {
   const ul = document.getElementById("list-nextup");
-  ul.innerHTML = "";
-
   const sortSelect = document.getElementById("sort-nextup");
+
+  if (sortSelect.value === "episodesRemaining") {
+    ul.innerHTML = "Loading episode counts…";
+    await ensureEpisodesRemaining(nextUpCache);
+  }
+
+  ul.innerHTML = "";
   const sorted = applySort(nextUpCache, sortSelect.value);
 
   for (const entry of sorted) {
@@ -72,15 +77,6 @@ async function markEpisodeWatched(show, seasonEpisodeStr) {
 
   await loadNextUp();
 }
-
-(async () => {
-  const sel = document.getElementById("sort-nextup");
-  populateSortSelect(sel);
-  sel.addEventListener("change", renderNextUp);
-
-  const token = await getToken();
-  if (token) await loadNextUp();
-})();
 
 ready(async () => {
   const sel = document.getElementById("sort-nextup");

@@ -40,16 +40,21 @@ async function showItemDetail(type, ids, currentStatus) {
   escapeAndBreak(overview, data.overview || "(no overview field found — check console log)");
   detail.appendChild(overview);
 
-  const select = document.createElement("select");
+  const btnGroup = document.createElement("div");
+  btnGroup.className = "status-btn-group";
   for (const s of statusesFor(type)) {
-    const opt = document.createElement("option");
-    opt.value = s;
-    opt.textContent = s;
-    if (s === currentStatus) opt.selected = true;
-    select.appendChild(opt);
+    const btn = document.createElement("button");
+    btn.className = "status-btn";
+    if (s === currentStatus) btn.classList.add("status-btn-active");
+    btn.textContent = s;
+    btn.addEventListener("click", async () => {
+      await changeStatus(type, ids, s);
+      for (const sibling of btnGroup.children) sibling.classList.remove("status-btn-active");
+      btn.classList.add("status-btn-active");
+    });
+    btnGroup.appendChild(btn);
   }
-  select.addEventListener("change", () => changeStatus(type, ids, select.value));
-  detail.appendChild(select);
+  detail.appendChild(btnGroup);
 
   if (type === "shows") {
     const episodesData = await simklGet(`/tv/episodes/${ids.simkl}`);

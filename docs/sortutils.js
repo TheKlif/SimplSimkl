@@ -39,12 +39,59 @@ const SORT_OPTIONS = {
   titleDesc:  { label: "Title (Z to A)", cmp: (a, b) => getEntryTitle(b).localeCompare(getEntryTitle(a)) },
   yearNewest: { label: "Year (newest first)", cmp: (a, b) => getEntryYear(b) - getEntryYear(a) },
   yearOldest: { label: "Year (oldest first)", cmp: (a, b) => getEntryYear(a) - getEntryYear(b) },
-  recent:     { label: "Most recently updated", cmp: (a, b) => getEntryRecency(b) - getEntryRecency(a) }
+  recent:     { label: "Most recently updated", cmp: (a, b) => getEntryRecency(b) - getEntryRecency(a) },
+  episodesRemaining: { label: "Episodes remaining (fewest first)", cmp: (a, b) => getEntryEpisodesRemaining(a) - getEntryEpisodesRemaining(b) }
 };
 
-function populateSortSelect(selectEl, savedKey) {
+// Cache of show id -> remaining aired-episode count, so re-selecting this
+// sort or switching tabs doesn't refetch shows already looked up this
+// session. Simkl has no "watched count" field on sync/all-items entries as
+// far as we've confirmed, so this fetches each show's full episode list and
+// counts aired episodes before the "watching" entry's next_to_watch marker.
+// ASSUMPTION: unverified against a live response — if a show's count looks
+// wrong, check the console for the per-show error/log below.
+const episodesRemainingCache = new Map();
+
+async function ensureEpisodesRemaining(items) {
+  const toFetch = items.filter(entry => {
+    const show = entry.show;
+    return show && !episodesRemainingCache.has(show.ids.simkl);
+  });
+
+  await Promise.all(toFetch.map(async entry => {
+    const show = entry.show;
+    try {
+      const episodesData = await simklGet(`/tv/episodes/${show.ids.simkl}`);
+      const aired = episodesData.filter(ep => ep.aired);
+
+      let watchedCount = aired.length; // no next_to_watch = fully caught up
+      const match = entry.next_to_watch && entry.next_to_watch.match(/S(\d+)E(\d+)/);
+      if (match) {
+        const season = parseInt(match[1], 10);
+        const episode = parseInt(match[2], 10);
+        watchedCount = aired.filter(ep =>
+          ep.season < season || (ep.season === season && ep.episode < episode)
+        ).length;
+      }
+
+      episodesRemainingCache.set(show.ids.simkl, Math.max(0, aired.length - watchedCount));
+    } catch (e) {
+      console.error(`Episode count fetch failed for "${show.title}":`, e);
+      episodesRemainingCache.set(show.ids.simkl, null);
+    }
+  }));
+}
+
+function getEntryEpisodesRemaining(entry) {
+  if (!entry.show) return Infinity; // movies don't have episodes; sort last
+  const val = episodesRemainingCache.get(entry.show.ids.simkl);
+  return typeof val === "number" ? val : Infinity; // unfetched/failed sorts last
+}
+
+function populateSortSelect(selectEl, savedKey, excludeKeys = []) {
   selectEl.innerHTML = "";
   for (const [key, opt] of Object.entries(SORT_OPTIONS)) {
+    if (excludeKeys.includes(key)) continue;
     const o = document.createElement("option");
     o.value = key;
     o.textContent = opt.label;
