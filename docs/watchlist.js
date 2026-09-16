@@ -91,7 +91,7 @@ async function changeStatus(type, ids, newStatus) {
   await loadAllLists();
 }
 
-window.addEventListener("DOMContentLoaded", async () => {
+ready(async () => {
   for (const status of STATUSES) {
     const sel = document.getElementById(`sort-${status}`);
     populateSortSelect(sel);

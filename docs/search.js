@@ -129,3 +129,12 @@ form.addEventListener("submit", (e) => {
   const query = document.getElementById("search-input").value.trim();
   if (query) runSearch(query);
 });
+
+ready(() => {
+  const form = document.getElementById("search-form");
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const query = document.getElementById("search-input").value.trim();
+    if (query) runSearch(query);
+  });
+});

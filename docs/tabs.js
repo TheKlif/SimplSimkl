@@ -9,7 +9,7 @@ function activateTab(tabId) {
   }
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+ready(() => {
   for (const btn of document.querySelectorAll(".tab-btn")) {
     btn.addEventListener("click", () => activateTab(btn.dataset.tab));
   }

@@ -73,6 +73,14 @@
   </div>
 
   <script>
+    function ready(fn) {
+      if (document.readyState === "loading") {
+        window.addEventListener("DOMContentLoaded", fn);
+      } else {
+        fn();
+      }
+    }
+
     (async () => {
       let versionTag = Date.now(); // fallback if the GitHub API call fails
       try {

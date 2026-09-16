@@ -81,3 +81,12 @@ async function markEpisodeWatched(show, seasonEpisodeStr) {
   const token = await getToken();
   if (token) await loadNextUp();
 })();
+
+ready(async () => {
+  const sel = document.getElementById("sort-nextup");
+  populateSortSelect(sel);
+  sel.addEventListener("change", renderNextUp);
+
+  const token = await getToken();
+  if (token) await loadNextUp();
+});
