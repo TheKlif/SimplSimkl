@@ -12,6 +12,17 @@ function escapeAndBreak(container, text) {
 function openOverlay(overlayId) { document.getElementById(overlayId).hidden = false; }
 function closeOverlay(overlayId) { document.getElementById(overlayId).hidden = true; }
 
+// Clicking the dimmed backdrop itself (not the modal content sitting on
+// top of it) should close the overlay, same as the close button.
+ready(() => {
+  for (const overlayId of ["itemdetail-overlay", "episodedetail-overlay"]) {
+    const overlayEl = document.getElementById(overlayId);
+    overlayEl.addEventListener("click", (e) => {
+      if (e.target === overlayEl) closeOverlay(overlayId);
+    });
+  }
+});
+
 async function showItemDetail(type, ids, currentStatus) {
   const singularType = type === "shows" ? "tv" : "movies";
   const detail = document.getElementById("itemdetail");
@@ -67,16 +78,23 @@ async function showItemDetail(type, ids, currentStatus) {
       (bySeason[ep.season] ||= []).push(ep);
     }
 
-    for (const seasonNum of Object.keys(bySeason).sort((a, b) => a - b)) {
+    const seasonKeys = Object.keys(bySeason).sort((a, b) => {
+      if (a === "undefined") return 1;
+      if (b === "undefined") return -1;
+      return a - b;
+    });
+
+    for (const seasonNum of seasonKeys) {
       const seasonBlock = document.createElement("details");
       const summary = document.createElement("summary");
-      summary.textContent = `Season ${seasonNum}`;
+      summary.textContent = seasonNum === "undefined" ? "Specials" : `Season ${seasonNum}`;
       seasonBlock.appendChild(summary);
 
       const epList = document.createElement("ul");
       for (const ep of bySeason[seasonNum]) {
         const li = document.createElement("li");
-        li.textContent = `E${ep.episode}: ${ep.title}${ep.aired ? "" : " (not aired)"}`;
+        const epLabel = ep.episode !== undefined && ep.episode !== null ? `E${ep.episode}: ` : "";
+        li.textContent = `${epLabel}${ep.title}${ep.aired ? "" : " (not aired)"}`;
         epList.appendChild(li);
       }
       seasonBlock.appendChild(epList);

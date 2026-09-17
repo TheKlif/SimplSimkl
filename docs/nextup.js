@@ -16,7 +16,7 @@ async function renderNextUp() {
   const ul = document.getElementById("list-nextup");
   const sortSelect = document.getElementById("sort-nextup");
 
-  if (sortSelect.value === "episodesRemaining") {
+  if (EPISODES_REMAINING_KEYS.includes(sortSelect.value)) {
     ul.innerHTML = "Loading episode counts…";
     await ensureEpisodesRemaining(nextUpCache);
   }

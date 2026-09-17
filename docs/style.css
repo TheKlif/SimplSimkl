@@ -89,7 +89,16 @@ li {
   border-bottom: 1px solid var(--border);
 }
 
-.item-title { cursor: pointer; color: var(--text); }
+.item-title {
+  cursor: pointer;
+  color: var(--text);
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .item-title:hover { color: var(--mint); text-decoration: underline; }
 
 .nextup-item { align-items: center; }
@@ -143,6 +152,7 @@ li {
 .search-form button:hover { background: #97e6ce; }
 
 .search-result-item { align-items: flex-start; }
+.search-result-text .type-badge { align-self: flex-start; }
 .search-result-banner {
   width: 70px;
   height: auto;

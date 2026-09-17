@@ -1,14 +1,14 @@
 let searchResultsCache = [];
 let searchCorrectionNote = null;
 
-// TMDB has real typo tolerance; Simkl's own /search does not. This uses
-// TMDB purely to fix the spelling of the query text, then hands the
-// corrected title to Simkl's own search below — Simkl stays the only
-// source of poster/overview/ids.simkl data (the /redirect endpoint's
-// tmdb-to-simkl ID lookup can't be read from browser JS: it returns its
-// answer as a Location header on a cross-origin redirect, which fetch()
-// deliberately hides from script). Falls back to the raw query if TMDB
-// has no match or the request fails, so search never breaks entirely.
+// TMDB was assumed to have real typo tolerance; live testing showed that's
+// mostly false — its search API behaves close to exact/prefix matching and
+// often finds nothing for a genuinely misspelled query (e.g. "mairo",
+// "brakeing bad" both came back empty). It's kept only as a best-effort
+// fallback for when Simkl's own search (zero typo tolerance) finds nothing
+// at all — see the fallback logic in runSearch below, not here. This
+// function itself just asks TMDB and returns whatever it finds, or the
+// original query unchanged if TMDB has nothing or the request fails.
 async function correctQueryViaTmdb(query) {
   try {
     const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`);
@@ -64,14 +64,29 @@ async function fetchOverview(item) {
 async function runSearch(query) {
   const resultsEl = document.getElementById("search-results");
   resultsEl.innerHTML = "Searching…";
+  searchCorrectionNote = null;
 
-  const correctedQuery = await correctQueryViaTmdb(query);
-  searchCorrectionNote = correctedQuery.toLowerCase() !== query.toLowerCase() ? correctedQuery : null;
-
-  const [movieResults, tvResults] = await Promise.all([
-    simklGet(`/search/movie?extended=full&q=${encodeURIComponent(correctedQuery)}`),
-    simklGet(`/search/tv?extended=full&q=${encodeURIComponent(correctedQuery)}`)
+  let [movieResults, tvResults] = await Promise.all([
+    simklGet(`/search/movie?extended=full&q=${encodeURIComponent(query)}`),
+    simklGet(`/search/tv?extended=full&q=${encodeURIComponent(query)}`)
   ]);
+
+  // Simkl's own search has zero typo tolerance, but always routing every
+  // query through TMDB first — even a query that already gets good direct
+  // hits — was collapsing broad results down to TMDB's single top match
+  // (e.g. "mario" narrowed to one specific title). Only try TMDB as a
+  // fallback when the direct search comes back completely empty, so a
+  // valid broad query keeps its full breadth.
+  if ((movieResults || []).length === 0 && (tvResults || []).length === 0) {
+    const correctedQuery = await correctQueryViaTmdb(query);
+    if (correctedQuery.toLowerCase() !== query.toLowerCase()) {
+      [movieResults, tvResults] = await Promise.all([
+        simklGet(`/search/movie?extended=full&q=${encodeURIComponent(correctedQuery)}`),
+        simklGet(`/search/tv?extended=full&q=${encodeURIComponent(correctedQuery)}`)
+      ]);
+      searchCorrectionNote = correctedQuery;
+    }
+  }
 
   console.log("Raw movie search result sample:", movieResults && movieResults[0]);
   console.log("Raw tv search result sample:", tvResults && tvResults[0]);

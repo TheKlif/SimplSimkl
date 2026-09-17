@@ -40,7 +40,8 @@ const SORT_OPTIONS = {
   yearNewest: { label: "Year (newest first)", cmp: (a, b) => getEntryYear(b) - getEntryYear(a) },
   yearOldest: { label: "Year (oldest first)", cmp: (a, b) => getEntryYear(a) - getEntryYear(b) },
   recent:     { label: "Most recently updated", cmp: (a, b) => getEntryRecency(b) - getEntryRecency(a) },
-  episodesRemaining: { label: "Episodes remaining (fewest first)", cmp: (a, b) => getEntryEpisodesRemaining(a) - getEntryEpisodesRemaining(b) }
+  episodesRemaining:     { label: "Episodes remaining (fewest first)", cmp: (a, b) => episodesRemainingCompare(a, b, true) },
+  episodesRemainingDesc: { label: "Episodes remaining (most first)", cmp: (a, b) => episodesRemainingCompare(a, b, false) }
 };
 
 // Cache of show id -> remaining aired-episode count, so re-selecting this
@@ -50,6 +51,8 @@ const SORT_OPTIONS = {
 // counts aired episodes before the "watching" entry's next_to_watch marker.
 // ASSUMPTION: unverified against a live response — if a show's count looks
 // wrong, check the console for the per-show error/log below.
+const EPISODES_REMAINING_KEYS = ["episodesRemaining", "episodesRemainingDesc"];
+
 const episodesRemainingCache = new Map();
 
 async function ensureEpisodesRemaining(items) {
@@ -62,7 +65,12 @@ async function ensureEpisodesRemaining(items) {
     const show = entry.show;
     try {
       const episodesData = await simklGet(`/tv/episodes/${show.ids.simkl}`);
-      const aired = episodesData.filter(ep => ep.aired);
+      // Specials/extras have no season number at all (not season 0 — just
+      // missing). They can never be matched against next_to_watch's
+      // season/episode numbers below, so leaving them in would make any
+      // unwatched special count as a "remaining" real episode forever.
+      // Excluded from this calculation entirely per Klif's request.
+      const aired = episodesData.filter(ep => ep.aired && ep.season !== undefined && ep.season !== null);
 
       let watchedCount = aired.length; // no next_to_watch = fully caught up
       const match = entry.next_to_watch && entry.next_to_watch.match(/S(\d+)E(\d+)/);
@@ -86,6 +94,18 @@ function getEntryEpisodesRemaining(entry) {
   if (!entry.show) return Infinity; // movies don't have episodes; sort last
   const val = episodesRemainingCache.get(entry.show.ids.simkl);
   return typeof val === "number" ? val : Infinity; // unfetched/failed sorts last
+}
+
+// Movies and anything not yet fetched use Infinity as a "put this last"
+// sentinel. A plain b-a for the descending option would instead put them
+// FIRST, so this handles the sentinel explicitly in both directions.
+function episodesRemainingCompare(a, b, ascending) {
+  const av = getEntryEpisodesRemaining(a);
+  const bv = getEntryEpisodesRemaining(b);
+  if (av === Infinity && bv === Infinity) return 0;
+  if (av === Infinity) return 1;
+  if (bv === Infinity) return -1;
+  return ascending ? av - bv : bv - av;
 }
 
 function populateSortSelect(selectEl, savedKey, excludeKeys = []) {
