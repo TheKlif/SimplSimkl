@@ -57,14 +57,20 @@ async function loadAllLists() {
 async function renderStatusList(status) {
   const ul = document.getElementById(`list-${status}`);
   const sortSelect = document.getElementById(`sort-${status}`);
+  const hideCaughtUpEl = status === "watching" ? document.getElementById("hide-caughtup") : null;
+  const hidingCaughtUp = hideCaughtUpEl ? hideCaughtUpEl.checked : false;
 
-  if (EPISODES_REMAINING_KEYS.includes(sortSelect.value)) {
+  if (EPISODES_REMAINING_KEYS.includes(sortSelect.value) || hidingCaughtUp) {
     ul.innerHTML = "Loading episode counts…";
     await ensureEpisodesRemaining(watchlistCache[status]);
   }
 
   ul.innerHTML = "";
-  const sorted = applySort(watchlistCache[status], sortSelect.value);
+  let sorted = applySort(watchlistCache[status], sortSelect.value);
+
+  if (hidingCaughtUp) {
+    sorted = sorted.filter(entry => getEntryEpisodesRemaining(entry) !== 0);
+  }
 
   for (const entry of sorted) {
     const media = entry.show || entry.movie || entry;
@@ -73,11 +79,16 @@ async function renderStatusList(status) {
     const title = document.createElement("span");
     title.className = "item-title";
     title.textContent = media.title || "(no title found)";
-    title.addEventListener("click", () => showItemDetail(entry._type, media.ids, status));
+    title.addEventListener("click", () => showItemDetail(entry._type, media.ids, status, entry.next_to_watch));
 
     const badge = document.createElement("span");
     badge.className = "type-badge";
     badge.textContent = TYPE_LABELS[entry._type] || entry._type;
+
+    const textGroup = document.createElement("span");
+    textGroup.className = "item-text-group";
+    textGroup.appendChild(badge);
+    textGroup.appendChild(title);
 
     const btnGroup = document.createElement("div");
     btnGroup.className = "status-btn-group";
@@ -90,9 +101,8 @@ async function renderStatusList(status) {
       btnGroup.appendChild(btn);
     }
 
-    li.appendChild(title);
-    li.appendChild(badge);
     li.appendChild(btnGroup);
+    li.appendChild(textGroup);
     ul.appendChild(li);
   }
 }
@@ -109,6 +119,8 @@ ready(async () => {
     populateSortSelect(sel, null, status === "watching" ? [] : EPISODES_REMAINING_KEYS);
     sel.addEventListener("change", () => renderStatusList(status));
   }
+
+  document.getElementById("hide-caughtup").addEventListener("change", () => renderStatusList("watching"));
 
   const token = await getToken();
   if (token) await loadAllLists();

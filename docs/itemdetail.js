@@ -21,9 +21,44 @@ ready(() => {
       if (e.target === overlayEl) closeOverlay(overlayId);
     });
   }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    for (const overlayId of ["episodedetail-overlay", "itemdetail-overlay"]) {
+      const overlayEl = document.getElementById(overlayId);
+      if (!overlayEl.hidden) {
+        closeOverlay(overlayId);
+        break; // close only the topmost (episode detail can sit over item detail)
+      }
+    }
+  });
 });
 
-async function showItemDetail(type, ids, currentStatus) {
+// Simkl has no confirmed per-episode watched-history endpoint. This
+// approximates "watched" the same way episodes-remaining does: everything
+// before the "watching" entry's next_to_watch marker counts as watched,
+// everything at/after doesn't. Completed = everything watched, Plan to
+// Watch = nothing watched. Specials (undefined season) and an unknown
+// status (e.g. opened from Search, which doesn't know the real status)
+// are left unmarked rather than guessed.
+function getWatchedThreshold(currentStatus, nextToWatch) {
+  if (currentStatus == null) return null;
+  if (currentStatus === "completed") return { season: Infinity, episode: Infinity };
+  if (currentStatus === "plantowatch") return { season: -Infinity, episode: -Infinity };
+  if (nextToWatch) {
+    const match = nextToWatch.match(/S(\d+)E(\d+)/);
+    if (match) return { season: parseInt(match[1], 10), episode: parseInt(match[2], 10) };
+  }
+  return { season: Infinity, episode: Infinity }; // watching, fully caught up
+}
+
+function isEpisodeWatched(ep, threshold) {
+  if (!threshold) return null;
+  if (ep.season === undefined || ep.season === null) return null; // specials: unknown
+  return ep.season < threshold.season || (ep.season === threshold.season && ep.episode < threshold.episode);
+}
+
+async function showItemDetail(type, ids, currentStatus, nextToWatch) {
   const singularType = type === "shows" ? "tv" : "movies";
   const detail = document.getElementById("itemdetail");
   detail.innerHTML = "Loading…";
@@ -69,6 +104,7 @@ async function showItemDetail(type, ids, currentStatus) {
 
   if (type === "shows") {
     const episodesData = await simklGet(`/tv/episodes/${ids.simkl}`);
+    const watchedThreshold = getWatchedThreshold(currentStatus, nextToWatch);
     const epHeader = document.createElement("h3");
     epHeader.textContent = "Episodes";
     detail.appendChild(epHeader);
@@ -94,7 +130,13 @@ async function showItemDetail(type, ids, currentStatus) {
       for (const ep of bySeason[seasonNum]) {
         const li = document.createElement("li");
         const epLabel = ep.episode !== undefined && ep.episode !== null ? `E${ep.episode}: ` : "";
-        li.textContent = `${epLabel}${ep.title}${ep.aired ? "" : " (not aired)"}`;
+        const watched = isEpisodeWatched(ep, watchedThreshold);
+        if (watched === true) {
+          li.className = "episode-watched";
+          li.textContent = `✓ ${epLabel}${ep.title}${ep.aired ? "" : " (not aired)"}`;
+        } else {
+          li.textContent = `${epLabel}${ep.title}${ep.aired ? "" : " (not aired)"}`;
+        }
         epList.appendChild(li);
       }
       seasonBlock.appendChild(epList);

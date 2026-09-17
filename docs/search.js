@@ -135,16 +135,21 @@ function renderSearchResults() {
     const textCol = document.createElement("div");
     textCol.className = "search-result-text";
 
+    const titleRow = document.createElement("span");
+    titleRow.className = "search-result-title-row";
+
     const title = document.createElement("span");
     title.className = "search-result-title";
     title.textContent = item.year ? `${item.title} (${item.year})` : item.title;
     title.addEventListener("click", () => showItemDetail(item._type, normalizedIds(item), null));
-    textCol.appendChild(title);
+    titleRow.appendChild(title);
 
     const badge = document.createElement("span");
     badge.className = "type-badge";
     badge.textContent = TYPE_LABELS[item._type] || item._type;
-    textCol.appendChild(badge);
+    titleRow.appendChild(badge);
+
+    textCol.appendChild(titleRow);
 
     const overview = document.createElement("p");
     overview.className = "search-result-overview";

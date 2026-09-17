@@ -33,7 +33,7 @@ async function renderNextUp() {
     img.src = posterUrl(show.poster);
     img.alt = show.title;
     img.className = "nextup-banner";
-    img.addEventListener("click", () => showItemDetail("shows", show.ids, "watching"));
+    img.addEventListener("click", () => showItemDetail("shows", show.ids, "watching", entry.next_to_watch));
 
     const textCol = document.createElement("div");
     textCol.className = "nextup-text";
@@ -41,7 +41,7 @@ async function renderNextUp() {
     const title = document.createElement("span");
     title.className = "nextup-title";
     title.textContent = show.title;
-    title.addEventListener("click", () => showItemDetail("shows", show.ids, "watching"));
+    title.addEventListener("click", () => showItemDetail("shows", show.ids, "watching", entry.next_to_watch));
 
     const episode = document.createElement("span");
     episode.className = "nextup-episode";
