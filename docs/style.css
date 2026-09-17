@@ -192,6 +192,7 @@ li {
 }
 
 .status-btn:hover { border-color: var(--mint); color: var(--mint); }
+.status-btn-placeholder { visibility: hidden; }
 .search-result-confirm { color: var(--mint); font-size: 0.85em; }
 
 .search-correction-note {

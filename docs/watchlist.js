@@ -100,12 +100,20 @@ async function renderStatusList(status) {
 
     const btnGroup = document.createElement("div");
     btnGroup.className = "status-btn-group";
-    for (const s of statusesFor(entry._type)) {
+    for (const s of STATUSES) {
       const btn = document.createElement("button");
       btn.className = "status-btn";
-      if (s === status) btn.classList.add("status-btn-active");
       btn.textContent = s;
-      btn.addEventListener("click", () => changeStatus(entry._type, media.ids, s));
+      if (s === "watching" && entry._type === "movies") {
+        // Movies don't have a "watching" status, but rendering nothing here
+        // (rather than an invisible placeholder of the same size) makes
+        // titles in mixed movie/show lists drift out of vertical alignment.
+        btn.classList.add("status-btn-placeholder");
+        btn.disabled = true;
+      } else {
+        if (s === status) btn.classList.add("status-btn-active");
+        btn.addEventListener("click", () => changeStatus(entry._type, media.ids, s));
+      }
       btnGroup.appendChild(btn);
     }
 
