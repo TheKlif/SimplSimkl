@@ -100,14 +100,6 @@ li {
 }
 .item-title:hover { color: var(--mint); text-decoration: underline; }
 
-.item-text-group {
-  display: flex;
-  align-items: center;
-  gap: 0.4em;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
 .nextup-item { align-items: center; }
 .nextup-banner {
   width: 70px;
@@ -159,7 +151,6 @@ li {
 .search-form button:hover { background: #97e6ce; }
 
 .search-result-item { align-items: flex-start; }
-.search-result-title-row { display: flex; align-items: center; gap: 0.4em; }
 .search-result-banner {
   width: 70px;
   height: auto;
@@ -265,12 +256,13 @@ details summary { cursor: pointer; color: var(--mint); padding: 0.3em 0; }
 }
 
 .type-badge {
-  font-size: 0.7em;
+  font-size: 0.65em;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--text-muted);
   border: 1px solid var(--border);
   border-radius: 3px;
   padding: 0.1em 0.4em;
-  flex-shrink: 0;
+  margin-left: 0.35em;
+  vertical-align: super;
 }

@@ -135,21 +135,19 @@ function renderSearchResults() {
     const textCol = document.createElement("div");
     textCol.className = "search-result-text";
 
-    const titleRow = document.createElement("span");
-    titleRow.className = "search-result-title-row";
-
     const title = document.createElement("span");
     title.className = "search-result-title";
-    title.textContent = item.year ? `${item.title} (${item.year})` : item.title;
+    title.textContent = item.title;
     title.addEventListener("click", () => showItemDetail(item._type, normalizedIds(item), null));
-    titleRow.appendChild(title);
 
     const badge = document.createElement("span");
     badge.className = "type-badge";
-    badge.textContent = TYPE_LABELS[item._type] || item._type;
-    titleRow.appendChild(badge);
+    badge.textContent = `[${TYPE_LABELS[item._type] || item._type}]`;
+    title.appendChild(badge);
 
-    textCol.appendChild(titleRow);
+    if (item.year) title.appendChild(document.createTextNode(` (${item.year})`));
+
+    textCol.appendChild(title);
 
     const overview = document.createElement("p");
     overview.className = "search-result-overview";
@@ -158,12 +156,16 @@ function renderSearchResults() {
 
     const btnGroup = document.createElement("div");
     btnGroup.className = "status-btn-group";
+    const currentStatus = getCurrentStatusForSimklId(normalizedIds(item).simkl);
     for (const s of statusesFor(item._type)) {
       const btn = document.createElement("button");
       btn.className = "status-btn";
+      if (s === currentStatus) btn.classList.add("status-btn-active");
       btn.textContent = s;
       btn.addEventListener("click", async () => {
         await changeStatus(item._type, normalizedIds(item), s);
+        for (const btnEl of btnGroup.querySelectorAll(".status-btn")) btnEl.classList.remove("status-btn-active");
+        btn.classList.add("status-btn-active");
         const confirmMsg = document.createElement("span");
         confirmMsg.className = "search-result-confirm";
         confirmMsg.textContent = `Added to ${s}.`;

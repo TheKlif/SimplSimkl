@@ -123,7 +123,11 @@ async function showItemDetail(type, ids, currentStatus, nextToWatch) {
     for (const seasonNum of seasonKeys) {
       const seasonBlock = document.createElement("details");
       const summary = document.createElement("summary");
-      summary.textContent = seasonNum === "undefined" ? "Specials" : `Season ${seasonNum}`;
+      const allWatched = seasonNum !== "undefined" &&
+        bySeason[seasonNum].every(ep => isEpisodeWatched(ep, watchedThreshold) === true);
+      summary.textContent = seasonNum === "undefined"
+        ? "Specials"
+        : `${allWatched ? "✓ " : ""}Season ${seasonNum}`;
       seasonBlock.appendChild(summary);
 
       const epList = document.createElement("ul");

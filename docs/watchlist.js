@@ -38,6 +38,18 @@ function statusesFor(type) {
 
 const watchlistCache = { watching: [], plantowatch: [], completed: [] };
 
+// Lets Search show an item's real current status (if any) without its own
+// separate lookup — reuses whatever's already loaded into the Watchlist tabs.
+function getCurrentStatusForSimklId(simklId) {
+  for (const status of STATUSES) {
+    for (const entry of watchlistCache[status]) {
+      const media = entry.show || entry.movie || entry;
+      if (media.ids && media.ids.simkl === simklId) return status;
+    }
+  }
+  return null;
+}
+
 async function loadAllLists() {
   for (const status of STATUSES) watchlistCache[status] = [];
 
@@ -83,12 +95,8 @@ async function renderStatusList(status) {
 
     const badge = document.createElement("span");
     badge.className = "type-badge";
-    badge.textContent = TYPE_LABELS[entry._type] || entry._type;
-
-    const textGroup = document.createElement("span");
-    textGroup.className = "item-text-group";
-    textGroup.appendChild(badge);
-    textGroup.appendChild(title);
+    badge.textContent = `[${TYPE_LABELS[entry._type] || entry._type}]`;
+    title.appendChild(badge);
 
     const btnGroup = document.createElement("div");
     btnGroup.className = "status-btn-group";
@@ -102,7 +110,7 @@ async function renderStatusList(status) {
     }
 
     li.appendChild(btnGroup);
-    li.appendChild(textGroup);
+    li.appendChild(title);
     ul.appendChild(li);
   }
 }
