@@ -2,6 +2,7 @@
 // parameter, so everything here operates on the full list already fetched.
 
 const TYPE_LABELS = { shows: "TV", movies: "Movie" };
+const STATUS_LABELS = { watching: "Watching", plantowatch: "Plan to Watch", completed: "Watched" };
 
 function getEntryTitle(entry) {
   const media = entry.show || entry.movie || entry;

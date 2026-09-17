@@ -92,7 +92,7 @@ async function showItemDetail(type, ids, currentStatus, nextToWatch) {
     const btn = document.createElement("button");
     btn.className = "status-btn";
     if (s === currentStatus) btn.classList.add("status-btn-active");
-    btn.textContent = s;
+    btn.textContent = STATUS_LABELS[s] || s;
     btn.addEventListener("click", async () => {
       await changeStatus(type, ids, s);
       for (const sibling of btnGroup.children) sibling.classList.remove("status-btn-active");

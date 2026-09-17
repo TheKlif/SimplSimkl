@@ -103,7 +103,7 @@ async function renderStatusList(status) {
     for (const s of STATUSES) {
       const btn = document.createElement("button");
       btn.className = "status-btn";
-      btn.textContent = s;
+      btn.textContent = STATUS_LABELS[s] || s;
       if (s === "watching" && entry._type === "movies") {
         // Movies don't have a "watching" status, but rendering nothing here
         // (rather than an invisible placeholder of the same size) makes

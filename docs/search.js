@@ -161,14 +161,14 @@ function renderSearchResults() {
       const btn = document.createElement("button");
       btn.className = "status-btn";
       if (s === currentStatus) btn.classList.add("status-btn-active");
-      btn.textContent = s;
+      btn.textContent = STATUS_LABELS[s] || s;
       btn.addEventListener("click", async () => {
         await changeStatus(item._type, normalizedIds(item), s);
         for (const btnEl of btnGroup.querySelectorAll(".status-btn")) btnEl.classList.remove("status-btn-active");
         btn.classList.add("status-btn-active");
         const confirmMsg = document.createElement("span");
         confirmMsg.className = "search-result-confirm";
-        confirmMsg.textContent = `Added to ${s}.`;
+        confirmMsg.textContent = `Added to ${STATUS_LABELS[s] || s}.`;
         btnGroup.appendChild(confirmMsg);
       });
       btnGroup.appendChild(btn);
