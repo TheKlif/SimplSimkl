@@ -135,11 +135,11 @@ async function showItemDetail(type, ids, currentStatus, nextToWatch) {
         const li = document.createElement("li");
         const epLabel = ep.episode !== undefined && ep.episode !== null ? `E${ep.episode}: ` : "";
         const watched = isEpisodeWatched(ep, watchedThreshold);
-        if (watched === true) {
-          li.className = "episode-watched";
-          li.textContent = `✓ ${epLabel}${ep.title}${ep.aired ? "" : " (not aired)"}`;
-        } else {
-          li.textContent = `${epLabel}${ep.title}${ep.aired ? "" : " (not aired)"}`;
+        li.textContent = `${watched === true ? "✓ " : ""}${epLabel}${ep.title}${ep.aired ? "" : " (not aired)"}`;
+        if (watched === true) li.classList.add("episode-watched");
+        if (ep.season !== undefined && ep.season !== null && ep.episode !== undefined && ep.episode !== null) {
+          li.classList.add("episode-link");
+          li.addEventListener("click", () => showEpisodeDetail(data, `S${ep.season}E${ep.episode}`));
         }
         epList.appendChild(li);
       }
