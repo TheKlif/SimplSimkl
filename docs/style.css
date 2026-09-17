@@ -173,6 +173,7 @@ li {
   display: flex;
   gap: 0.4em;
   flex-wrap: wrap;
+  flex-shrink: 0;
   align-items: center;
 }
 .status-btn {
